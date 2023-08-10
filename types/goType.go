@@ -42,8 +42,31 @@ var imports = map[GoType]string{
 	NullDecimal: "gopkg.in/guregu/null.v4",
 }
 
+var nullToNotNull = map[GoType]GoType{
+	NullString:  String,
+	NullInt:     Int,
+	NullInt8:    Int8,
+	NullInt64:   Int64,
+	NullFloat:   Float,
+	NullFloat64: Float64,
+	NullTime:    Time,
+	NullBool:    Bool,
+	NullDecimal: Decimal,
+}
+
 func (g GoType) Import() string {
 	return imports[g]
+}
+
+func (g GoType) IsNullable() bool {
+	if _, ok := nullToNotNull[g]; !ok {
+		return false
+	}
+	return true
+}
+
+func (g GoType) ToNotNull() GoType {
+	return nullToNotNull[g]
 }
 
 func (g GoType) String() string {

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println(parser.ParseTable(`CREATE TABLE IF NOT EXISTS tasks (
+	p, _ := parser.ParseTable(`CREATE TABLE IF NOT EXISTS tasks (
 		task_id INT AUTO_INCREMENT PRIMARY KEY,
 		title VARCHAR(255) NOT NULL,
 		start_date DATE,
@@ -16,5 +16,7 @@ func main() {
 		priority TINYINT NOT NULL,
 		description TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	)  ENGINE=INNODB;`))
+	)  ENGINE=INNODB;`)
+	s := p.Struct()
+	fmt.Println(s)
 }

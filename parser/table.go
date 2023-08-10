@@ -8,9 +8,23 @@ import (
 )
 
 type Table struct {
+	Name    string
 	Type    types.DDLType
-	Table   string
 	Columns []*Column
+}
+
+func (c Table) Struct() *GoStruct {
+	gs := &GoStruct{
+		Name: types.NewGoName(c.Name),
+	}
+	for _, col := range c.Columns {
+		if col.Identifier {
+			goType, _ := types.NewGoType(col.Type, !col.NotNull)
+			gs.Id = types.NewId(types.NewGoName(col.Name), goType)
+		}
+		gs.Properties = append(gs.Properties, col.Property())
+	}
+	return gs
 }
 
 type Column struct {
@@ -18,6 +32,15 @@ type Column struct {
 	Type       string
 	Identifier bool
 	NotNull    bool
+}
+
+func (c Column) Property() *Property {
+	goType, _ := types.NewGoType(c.Type, !c.NotNull)
+	return &Property{
+		Name: types.NewGoName(c.Name),
+		Type: goType,
+		Tag:  types.NewTag(c.Name),
+	}
 }
 
 func ParseTable(s string) (Table, error) {
@@ -30,8 +53,8 @@ func ParseTable(s string) (Table, error) {
 	switch typ := parseDDLType(splitted[0]); typ {
 	case types.CreateTable:
 		t := Table{
-			Type:  typ,
-			Table: parseCreateTable(splitted[0]),
+			Type: typ,
+			Name: parseCreateTable(splitted[0]),
 		}
 
 		for _, s := range splitted[1 : len(splitted)-1] {

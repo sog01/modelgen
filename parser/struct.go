@@ -5,13 +5,13 @@ import (
 )
 
 type GoStruct struct {
-	Name       string
+	Name       types.GoName
 	Id         types.Id
 	Properties Properties
 }
 
 type Property struct {
-	Name string
+	Name types.GoName
 	Type types.GoType
 	Tag  types.Tag
 }

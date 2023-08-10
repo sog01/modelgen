@@ -1,6 +1,10 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/iancoleman/strcase"
+)
 
 type Tag struct {
 	Name       string `json:""`
@@ -9,7 +13,7 @@ type Tag struct {
 
 func NewTag(name string) Tag {
 	return Tag{
-		Name:       name,
+		Name:       strcase.ToLowerCamel(name),
 		Definition: "db",
 	}
 }
