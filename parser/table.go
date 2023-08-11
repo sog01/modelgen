@@ -14,17 +14,16 @@ type Table struct {
 }
 
 func (c Table) Struct() *GoStruct {
-	gs := &GoStruct{
-		Name: types.NewGoName(c.Name),
-	}
+	var id types.Id
+	var props Properties
 	for _, col := range c.Columns {
 		if col.Identifier {
 			goType, _ := types.NewGoType(col.Type, !col.NotNull)
-			gs.Id = types.NewId(types.NewGoName(col.Name), goType)
+			id = types.NewId(types.NewGoName(col.Name), goType)
 		}
-		gs.Properties = append(gs.Properties, col.Property())
+		props = append(props, col.Property())
 	}
-	return gs
+	return NewGoStruct(types.NewGoName(c.Name), id, props)
 }
 
 type Column struct {

@@ -5,9 +5,14 @@ import (
 )
 
 type GoStruct struct {
-	Name       types.GoName
-	Id         types.Id
-	Properties Properties
+	Name        types.GoName
+	PackageName types.GoName
+	Id          types.Id
+	Properties  Properties
+}
+
+func (g *GoStruct) ToTemplate() *Template {
+	return NewTemplate(g)
 }
 
 type Property struct {
@@ -17,3 +22,12 @@ type Property struct {
 }
 
 type Properties []*Property
+
+func NewGoStruct(name types.GoName, id types.Id, props Properties) *GoStruct {
+	return &GoStruct{
+		Name:        name,
+		Id:          id,
+		PackageName: name.ToLower(),
+		Properties:  props,
+	}
+}

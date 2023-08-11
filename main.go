@@ -18,5 +18,6 @@ func main() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)  ENGINE=INNODB;`)
 	s := p.Struct()
-	fmt.Println(s)
+	t := s.ToTemplate().ToModelTemplate()
+	fmt.Println(t)
 }

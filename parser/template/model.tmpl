@@ -1,0 +1,8 @@
+package {{.PackageName}}
+
+type {{.Name}} struct {
+		{{range .Properties}} {{.Name}} {{.Type}} {{.Tag.HTML}}
+		{{end}}
+}
+ 
+type {{.Name}}List []*{{.Name}}
