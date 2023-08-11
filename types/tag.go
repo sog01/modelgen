@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"html/template"
-
-	"github.com/iancoleman/strcase"
 )
 
 type Tag struct {
@@ -14,7 +12,7 @@ type Tag struct {
 
 func NewTag(name string) Tag {
 	t := Tag{
-		Name:       strcase.ToLowerCamel(name),
+		Name:       name,
 		Definition: "db",
 	}
 	return t

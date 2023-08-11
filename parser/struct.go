@@ -6,6 +6,7 @@ import (
 
 type GoStruct struct {
 	Name        types.GoName
+	PluralName  types.GoName
 	PackageName types.GoName
 	Id          types.Id
 	Properties  Properties
@@ -48,7 +49,8 @@ type Imports struct {
 
 func NewGoStruct(name types.GoName, id types.Id, props Properties) *GoStruct {
 	return &GoStruct{
-		Name:        name,
+		Name:        name.ToSingular(),
+		PluralName:  name.ToPlural(),
 		Id:          id,
 		PackageName: name.ToLower(),
 		Properties:  props,

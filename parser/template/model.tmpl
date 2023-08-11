@@ -6,9 +6,9 @@ type {{.Name}} struct {
 		{{end}}
 }
  
-type {{.Name}}List []*{{.Name}}
+type {{.PluralName}} []*{{.Name}}
 
-func(m {{.Name}}List) Ids() (ids []{{.Id.Type}}) {
+func(m {{.PluralName}}) Ids() (ids []{{.Id.Type}}) {
 	for _, mm := range m {
 		ids = append(ids, mm.{{.Id.Name}})
 	}
