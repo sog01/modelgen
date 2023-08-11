@@ -1,7 +1,8 @@
 package {{.PackageName}}
+{{.Imports.Model}}
 
 type {{.Name}} struct {
-		{{range .Properties}} {{.Name}} {{.Type}} {{.Tag.HTML}}
+		{{range .Properties}} {{.Name}} {{.Type}} {{.Tag}}
 		{{end}}
 }
  

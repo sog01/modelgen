@@ -3,8 +3,8 @@ package parser
 import (
 	"bytes"
 	"embed"
-	"html/template"
 	"io/fs"
+	"text/template"
 )
 
 type Template struct {

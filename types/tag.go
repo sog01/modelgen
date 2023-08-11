@@ -10,7 +10,6 @@ import (
 type Tag struct {
 	Name       string
 	Definition string
-	HTML       template.HTML
 }
 
 func NewTag(name string) Tag {
@@ -18,7 +17,6 @@ func NewTag(name string) Tag {
 		Name:       strcase.ToLowerCamel(name),
 		Definition: "db",
 	}
-	t.HTML = template.HTML(t.String())
 	return t
 }
 

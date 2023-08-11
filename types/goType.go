@@ -54,8 +54,11 @@ var nullToNotNull = map[GoType]GoType{
 	NullDecimal: Decimal,
 }
 
-func (g GoType) Import() string {
-	return imports[g]
+func (g GoType) Import() (Import, bool) {
+	if path, ok := imports[g]; ok {
+		return NewImport(path, ""), true
+	}
+	return Import{}, false
 }
 
 func (g GoType) IsNullable() bool {
