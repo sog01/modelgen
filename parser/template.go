@@ -8,7 +8,7 @@ import (
 )
 
 type Template struct {
-	goStruct *GoStruct
+	data any
 }
 
 //go:embed template/*
@@ -16,15 +16,15 @@ var templateSource embed.FS
 
 func (t *Template) ToModelTemplate() string {
 	f, _ := fs.ReadFile(templateSource, "template/model.tmpl")
-	mt, _ := execTmpl(string(f), t.goStruct)
+	mt, _ := execTmpl(string(f), t.data)
 	return mt
 }
 
-func NewTemplate(goStruct *GoStruct) *Template {
-	return &Template{goStruct}
+func NewTemplate(data any) *Template {
+	return &Template{data: data}
 }
 
-func execTmpl(s string, data interface{}) (string, error) {
+func execTmpl(s string, data any) (string, error) {
 	t, err := template.New("").Parse(s)
 
 	if err != nil {

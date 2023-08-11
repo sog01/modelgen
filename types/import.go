@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Import struct {
 	Alias string
@@ -12,6 +15,22 @@ func (i Import) String() string {
 		return fmt.Sprintf(`%s "%s"`, i.Alias, i.Path)
 	}
 	return fmt.Sprintf(`"%s"`, i.Path)
+}
+
+type Imports []*Import
+
+func (i Imports) String() string {
+	imports := []string{}
+	for _, ii := range i {
+		imports = append(imports, ii.String())
+	}
+
+	if len(imports) > 1 {
+		s := "import\n(\n" + strings.Join(imports, "\n") + ")\n"
+		return s
+	}
+
+	return "import " + imports[0]
 }
 
 func NewImport(path, alias string) Import {

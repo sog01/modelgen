@@ -7,3 +7,10 @@ type {{.Name}} struct {
 }
  
 type {{.Name}}List []*{{.Name}}
+
+func(m {{.Name}}List) Ids() (ids []{{.Id.Type}}) {
+	for _, mm := range m {
+		ids = append(ids, mm.{{.Id.Name}})
+	}
+	return
+}
