@@ -1,0 +1,204 @@
+package {{.PackageName}}
+{{.Imports.Repository}}
+
+type {{.Name}}Repository struct {
+	db *sqlx.DB
+}
+
+func (r *{{.Name}}Repository) Get(ctx context.Context, id Id, fields ...{{.Name}}Field) (*{{.Name}}, error) {
+    {{.PrivateName}}Data := {{.Name}}{}
+    if len(fields) == 0 {  
+        fields = {{.PrivateName}}AllFields
+    }
+    idPlaceholder := []string{
+        {{range .Ids}} "`{{.OriginName}}` = ?",
+        {{end}}}
+    query := "SELECT "+ {{.Name}}Fields(fields).String() + " FROM `{{.OriginName}}`" + "where "+strings.Join(idPlaceholder, " AND ")
+    err := r.db.GetContext(ctx, &{{.PrivateName}}Data, 
+    query, 
+    {{range .Ids}} id.{{.Name}},
+    {{end}})
+    if err != nil {
+        return nil, &{{.Name}}RepositoryError{err, query}
+    }
+    return &{{.PrivateName}}Data, nil
+}
+
+func (r *{{.Name}}Repository) Create(ctx context.Context, {{.PrivateName}}Data *{{.Name}}) (*{{.Name}}, error) {
+    query := fmt.Sprintf("INSERT INTO `{{.OriginName}}` (%s)", {{.PrivateName}}AllFields.String()) + fmt.Sprintf(`
+        VALUES (%s)
+    `, {{.PrivateName}}AllFields.Placeholder())
+
+    data := {{.PrivateName}}Data
+    {{if .FirstId.AutoIncrement}}res, err := r.db.ExecContext(ctx, query, 
+    {{range .Properties}}data.{{.Name}},
+    {{end}}){{end}}{{if eq .FirstId.AutoIncrement false}}_, err := r.db.ExecContext(ctx, query, 
+    {{range .Properties}}data.{{.Name}},
+    {{end}}){{end}}
+	if err != nil {
+		return nil, &{{.Name}}RepositoryError{err, query}
+	}
+    {{if .FirstId.AutoIncrement}} id, _ := res.LastInsertId()
+        resData := &{{.Name}}{
+            {{.FirstId.Name}}: id,
+            {{range .PropertiesWithoutId}}{{.Name}}: data.{{.Name}},
+            {{end}}}{{if .RemainsIds}} 
+            {{range .RemainsIds}} resData.{{.Name}} = data.{{.Name}}
+            {{end}}
+            return resData, nil
+        {{end}}{{if not .RemainsIds}} 
+            return resData, nil{{end}}
+    }{{end}} {{if eq .FirstId.AutoIncrement false}} return &{{.Name}}{            
+            {{range .Properties}}{{.Name}}: data.{{.Name}},
+            {{end}}
+        }, nil
+    }{{end}}
+
+func (r *{{.Name}}Repository) Update(ctx context.Context, {{.PrivateName}}Data *{{.Name}}, fields ...{{.Name}}Field) error {
+    if len(fields) == 0 {
+		fields = {{.PrivateName}}AllUpdatedFields
+	}
+
+    idPlaceholder := []string{
+    {{range .Ids}} "`{{.OriginName}}` = ?",
+    {{end}}}
+    data := {{.PrivateName}}Data
+    query := "UPDATE `{{.OriginName}}`" + fmt.Sprintf(" SET %s\nWHERE %s",
+        {{.Name}}Fields(fields).StringUpdate(), 
+        strings.Join(idPlaceholder, " AND "),
+    )
+    values := {{.Name}}Fields(fields).Values({{.PrivateName}}Data)
+	values = append(values, 
+    {{range .Ids}} data.{{.Name}},
+    {{end}})
+    _, err := r.db.ExecContext(ctx, query, values...)
+    if err != nil {
+		return &{{.Name}}RepositoryError{err, query}
+	}
+    return nil
+}
+
+func (r *{{.Name}}Repository) Delete(ctx context.Context, id Id) error {
+    idPlaceholder := []string{
+        {{range .Ids}} "`{{.OriginName}}` = ?",
+        {{end}}}
+	query := "DELETE FROM `{{.OriginName}}`"  + "where "+strings.Join(idPlaceholder, " AND ")
+	_, err := r.db.ExecContext(ctx, 
+    query, 
+    {{range .Ids}} id.{{.Name}},
+    {{end}})
+	if err != nil {
+		return &{{.Name}}RepositoryError{err, query}
+	}
+	return nil
+}
+
+func New{{.Name}}Repository(db *sqlx.DB) *{{.Name}}Repository {
+    return &{{.Name}}Repository{db}
+}
+
+type {{.Name}}Field int
+
+const (
+    IdField {{.Name}}Field = iota + 1
+    {{range .PropertiesWithoutId}} {{.Name}}
+	{{end}})
+
+func (p {{.Name}}Field) String() string {
+    switch (p) {
+    case IdField:
+        idStrings := []string{
+            {{range .Ids}}"`{{.OriginName}}`",{{end}}
+        }
+        return strings.Join(idStrings, ",")
+    {{range .PropertiesWithoutId}} case {{.Name}}:
+        return "`{{.OriginName}}`"
+	{{end}} default: 
+     return "unknown"
+    }
+}
+
+func (p {{.Name}}Field) StringUpdate() string {
+    switch (p) {
+    {{range .PropertiesWithoutId}} case {{.Name}}:
+        return "`{{.OriginName}}` = ?"
+	{{end}} default: 
+     return "unknown"
+    }
+}
+
+func (p {{.Name}}Field) Value({{.PrivateName}}Data *{{.Name}}) []any {
+    switch (p) {
+    {{range .PropertiesWithoutId}} case {{.Name}}:
+        return []any{
+            {{$.PrivateName}}Data.{{.Name}},
+        }
+	{{end}} default: 
+     return nil
+    }
+}
+
+type {{.Name}}Fields []{{.Name}}Field
+
+func (p {{.Name}}Fields) String() string {
+    s := []string{}
+    for _, pp := range p {
+		s = append(s, pp.String())
+	}
+	return strings.Join(s, ",")
+}
+
+func (p {{.Name}}Fields) StringUpdate() string {
+    s := []string{}
+    for _, pp := range p {
+		s = append(s, pp.StringUpdate())
+	}
+	return strings.Join(s, ",")
+}
+
+func (p {{.Name}}Fields) Placeholder() string {
+	s := []string{}
+	for _, pp := range p {
+        if pp == IdField {
+            {{range .Ids}} s = append(s, "?")
+            {{end}}continue	
+	    }
+		s = append(s, "?")
+	}
+	return strings.Join(s, ",")
+}
+
+func (p {{.Name}}Fields) Values({{.PrivateName}}Data *{{.Name}}) []any {
+    values := []any{}
+    for _, pp := range p {
+		values = append(values, pp.Value({{.PrivateName}}Data)...)
+	}
+	return values
+}
+
+var {{.PrivateName}}AllFields {{.Name}}Fields = {{.Name}}Fields {
+    IdField,
+    {{range .PropertiesWithoutId}}{{.Name}},
+{{end}}}
+
+var {{.PrivateName}}AllUpdatedFields {{.Name}}Fields = {{.Name}}Fields {
+    {{range .PropertiesWithoutId}}{{.Name}},
+{{end}}}
+
+type {{.Name}}RepositoryError struct {
+    err error
+    query string
+}
+
+func Parse{{.Name}}RepositoryErr(err error) *{{.Name}}RepositoryError {
+	e, _ := err.(*{{.Name}}RepositoryError)
+	return e
+}
+
+func (e {{.Name}}RepositoryError) Error() string {
+	return e.err.Error()
+}
+
+func (e {{.Name}}RepositoryError) Query() string {
+	return e.query
+}

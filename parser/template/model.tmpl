@@ -5,12 +5,29 @@ type {{.Name}} struct {
 		{{range .Properties}} {{.Name}} {{.Type}} {{.Tag}}
 		{{end}}
 }
- 
+
+func (m {{.Name}}) GetId() Id {
+	return Id{
+		{{range .Ids}} {{.Name}}: m.{{.Name}},
+		{{end}}}
+}
+
 type {{.PluralName}} []*{{.Name}}
 
-func(m {{.PluralName}}) Ids() (ids []{{.Id.Type}}) {
+func(m {{.PluralName}}) GetIds() (ids []Id) {
 	for _, mm := range m {
-		ids = append(ids, mm.{{.Id.Name}})
+		ids = append(ids, mm.GetId())
 	}
 	return
+}
+
+type Id struct {
+	{{range .Ids}} {{.Name}} {{.Type}} 
+	{{end}}}
+
+func NewId({{range .Ids}} {{.LowerName}} {{.Type}},
+{{end}}) Id {
+	return Id{
+		{{range .Ids}} {{.Name}}: {{.LowerName}},
+		{{end}}}
 }

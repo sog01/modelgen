@@ -8,7 +8,7 @@ import (
 type GoType int
 
 const (
-	String GoType = iota
+	String GoType = iota + 1
 	Int
 	Int8
 	Int64
@@ -72,6 +72,15 @@ func (g GoType) ToNotNull() GoType {
 	return nullToNotNull[g]
 }
 
+func (g GoType) IsNumber() bool {
+	return g == Int ||
+		g == Int8 ||
+		g == Int64 ||
+		g == NullInt ||
+		g == NullInt8 ||
+		g == NullInt64
+}
+
 func (g GoType) String() string {
 	switch g {
 	case String:
@@ -122,7 +131,7 @@ func NewGoType(s string, nullable bool) (GoType, error) {
 	switch strings.ToLower(s) {
 	case "bigint":
 		return Int64, nil
-	case "int":
+	case "int", "smallint":
 		return Int, nil
 	case "text", "varchar", "enum", "char", "longtext", "mediumblob":
 		return String, nil
@@ -135,7 +144,7 @@ func NewGoType(s string, nullable bool) (GoType, error) {
 	case "decimal":
 		return Float64, nil
 	default:
-		return -1, errors.New("unknown type")
+		return 0, errors.New("unknown type")
 	}
 }
 
@@ -143,7 +152,7 @@ func newNullableGoType(s string) (GoType, error) {
 	switch s {
 	case "bigint":
 		return NullInt64, nil
-	case "int":
+	case "int", "smallint":
 		return NullInt, nil
 	case "text", "varchar", "enum", "char", "longtext", "mediumblob":
 		return NullString, nil
@@ -156,6 +165,6 @@ func newNullableGoType(s string) (GoType, error) {
 	case "decimal":
 		return NullDecimal, nil
 	default:
-		return -1, errors.New("unknown type")
+		return 0, errors.New("unknown type")
 	}
 }

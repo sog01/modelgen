@@ -5,8 +5,9 @@ import "strings"
 type DDLType int
 
 const (
-	CreateTable DDLType = iota
+	CreateTable DDLType = iota + 1
 	AlterTable
+	EmptyDDL = 0
 )
 
 func NewDDLType(s string) DDLType {
@@ -16,6 +17,6 @@ func NewDDLType(s string) DDLType {
 	case "alter":
 		return AlterTable
 	default:
-		return -1
+		return 0
 	}
 }

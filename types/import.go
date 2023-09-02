@@ -17,6 +17,10 @@ func (i Import) String() string {
 	return fmt.Sprintf(`"%s"`, i.Path)
 }
 
+func (i Import) Pointer() *Import {
+	return &i
+}
+
 type Imports []*Import
 
 func (i Imports) String() string {
@@ -26,7 +30,7 @@ func (i Imports) String() string {
 	}
 
 	if len(imports) > 1 {
-		s := "import\n(\n" + strings.Join(imports, "\n") + ")\n"
+		s := "import\n(\n" + strings.Join(imports, "\n") + "\n)\n"
 		return s
 	}
 

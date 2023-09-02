@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/sog01/modelgen/types"
 )
@@ -13,92 +12,45 @@ type Table struct {
 	Columns []*Column
 }
 
-func (c Table) Struct() *GoStruct {
-	var id types.Id
+func (c Table) Struct() (*GoStruct, error) {
+	var ids types.Ids
 	var props Properties
 	for _, col := range c.Columns {
-		if col.Identifier {
-			goType, _ := types.NewGoType(col.Type, !col.NotNull)
-			id = types.NewId(types.NewGoName(col.Name), goType)
+		prop, idProp := col.Property()
+		if !idProp.Empty() {
+			ids = append(ids, idProp)
 		}
-		props = append(props, col.Property())
+		props = append(props, prop)
 	}
-	return NewGoStruct(types.NewGoName(c.Name), id, props)
+	if len(ids) == 0 {
+		return nil, errors.New("empty id")
+	}
+	return NewGoStruct(types.NewGoName(c.Name), ids, props), nil
 }
 
 type Column struct {
-	Name       string
-	Type       string
-	Identifier bool
-	NotNull    bool
+	Name          string
+	Type          string
+	Identifier    bool
+	AutoIncrement bool
+	NotNull       bool
 }
 
-func (c Column) Property() *Property {
+func (c Column) Property() (*Property, types.Id) {
 	goType, _ := types.NewGoType(c.Type, !c.NotNull)
-	return &Property{
-		Name: types.NewGoName(c.Name),
-		Type: goType,
-		Tag:  types.NewTag(c.Name),
-	}
-}
 
-func ParseTable(s string) (Table, error) {
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-	splitted := strings.Split(s, "\n")
-	if len(splitted) == 0 {
-		return Table{}, errors.New("empty string")
-	}
-	switch typ := parseDDLType(splitted[0]); typ {
-	case types.CreateTable:
-		t := Table{
-			Type: typ,
-			Name: parseCreateTable(splitted[0]),
-		}
-
-		for _, s := range splitted[1 : len(splitted)-1] {
-			t.Columns = append(t.Columns, parseColumn(s))
-		}
-		return t, nil
-	}
-	return Table{}, nil
-}
-
-func parseColumn(s string) *Column {
-	s = strings.TrimSpace(s)
-	splitted := strings.Split(s, " ")
-	c := Column{
-		Name:       splitted[0],
-		Type:       sanitizeColumnType(splitted[1]),
-		Identifier: strings.Contains(s, "primary key"),
-		NotNull:    strings.Contains(s, "not null"),
+	prop := &Property{
+		Name:       types.NewGoName(c.Name),
+		Type:       goType,
+		Tag:        types.NewTag(c.Name),
+		OriginName: c.Name,
 	}
 
-	return &c
-}
-
-func sanitizeColumnType(s string) string {
-	s = strings.ReplaceAll(s, ",", "")
-	bracketIndex := strings.Index(s, "(")
-	if bracketIndex > -1 {
-		return s[:bracketIndex]
+	var id types.Id
+	if c.Identifier {
+		id = types.NewId(prop.Name, goType, c.AutoIncrement)
+		prop.Type = id.Type
 	}
 
-	return s
-}
-
-func parseCreateTable(s string) string {
-	splitted := strings.Split(s, " ")
-	return splitted[len(splitted)-2]
-}
-
-func parseDDLType(s string) types.DDLType {
-	var index int
-	for i, ss := range s {
-		if string(ss) == " " {
-			index = i
-			break
-		}
-	}
-	return types.NewDDLType(s[:index])
+	return prop, id
 }
