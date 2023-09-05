@@ -24,6 +24,29 @@ func (r *{{.Name}}Repository) Get(ctx context.Context, id Id, fields ...{{.Name}
     return &{{.PrivateName}}Data, nil
 }
 
+func (r *{{.Name}}Repository) GetAll(ctx context.Context, fields ...{{.Name}}Field) ({{.PluralName}}, error) {
+    {{.PrivateName}}Data := {{.PluralName}}{}
+    if len(fields) == 0 {  
+        fields = {{.PrivateName}}AllFields
+    }
+    query := "SELECT "+ {{.Name}}Fields(fields).String() + " FROM `{{.OriginName}}`"
+    err := r.db.SelectContext(ctx, &{{.PrivateName}}Data, query)
+    if err != nil {
+        return nil, &{{.Name}}RepositoryError{err, query}
+    }
+    return {{.PrivateName}}Data, nil
+}
+
+func (r *{{.Name}}Repository) Count(ctx context.Context) (int, error) {
+    var count int
+    query := "SELECT count(1) FROM `{{.OriginName}}` where deleted_at is null"
+    err := r.db.QueryRowxContext(ctx, query).Scan(&count)
+    if err != nil {
+        return 0, &{{.Name}}RepositoryError{err, query}
+    }
+    return count, nil
+}
+
 func (r *{{.Name}}Repository) Create(ctx context.Context, {{.PrivateName}}Data *{{.Name}}) (*{{.Name}}, error) {
     query := fmt.Sprintf("INSERT INTO `{{.OriginName}}` (%s)", {{.PrivateName}}AllFields.String()) + fmt.Sprintf(`
         VALUES (%s)
